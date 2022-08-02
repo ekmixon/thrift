@@ -35,12 +35,11 @@ def generate_random_buff():
         run_len = random.randint(1, 64)
         if index + run_len > buf_len:
             run_len = buf_len - index
-        for i in range(run_len):
+        for _ in range(run_len):
             data.extend(random.sample(string.printable, 1))
         index += 1
 
-    new_data = ''.join(data)
-    return new_data
+    return ''.join(data)
 
 
 class TestTZlibTransport(unittest.TestCase):

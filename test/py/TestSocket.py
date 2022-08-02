@@ -45,7 +45,7 @@ class TimeoutTest(unittest.TestCase):
 
         try:
             leaky = []
-            for i in range(100):
+            for _ in range(100):
                 socket = TSocket.TSocket('localhost', self.port)
                 socket.setTimeout(10)
                 socket.open()

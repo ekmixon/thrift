@@ -88,8 +88,8 @@ class TestEof(unittest.TestCase):
         # TODO: we should make sure this covers more of the code paths
 
         data = self.make_data(pfactory)
-        for i in range(0, len(data) + 1):
-            trans = TTransport.TMemoryBuffer(data[0:i])
+        for i in range(len(data) + 1):
+            trans = TTransport.TMemoryBuffer(data[:i])
             prot = pfactory.getProtocol(trans)
             try:
                 x = Xtruct()

@@ -69,7 +69,7 @@ class THttpClient(TTransportBase):
             self.host = parsed.hostname
             self.path = parsed.path
             if parsed.query:
-                self.path += '?%s' % parsed.query
+                self.path += f'?{parsed.query}'
         try:
             proxy = urllib.request.getproxies()[self.scheme]
         except KeyError:
@@ -96,10 +96,10 @@ class THttpClient(TTransportBase):
     def basic_proxy_auth_header(proxy):
         if proxy is None or not proxy.username:
             return None
-        ap = "%s:%s" % (urllib.parse.unquote(proxy.username),
-                        urllib.parse.unquote(proxy.password))
+        ap = f"{urllib.parse.unquote(proxy.username)}:{urllib.parse.unquote(proxy.password)}"
+
         cr = base64.b64encode(ap).strip()
-        return "Basic " + cr
+        return f"Basic {cr}"
 
     def using_proxy(self):
         return self.realhost is not None
@@ -127,10 +127,7 @@ class THttpClient(TTransportBase):
         return self.__http is not None
 
     def setTimeout(self, ms):
-        if ms is None:
-            self.__timeout = None
-        else:
-            self.__timeout = ms / 1000.0
+        self.__timeout = None if ms is None else ms / 1000.0
 
     def setCustomHeaders(self, headers):
         self.__custom_headers = headers
@@ -153,8 +150,10 @@ class THttpClient(TTransportBase):
         # HTTP request
         if self.using_proxy() and self.scheme == "http":
             # need full URL of real host for HTTP proxy here (HTTPS uses CONNECT tunnel)
-            self.__http.putrequest('POST', "http://%s:%s%s" %
-                                   (self.realhost, self.realport, self.path))
+            self.__http.putrequest(
+                'POST', f"http://{self.realhost}:{self.realport}{self.path}"
+            )
+
         else:
             self.__http.putrequest('POST', self.path)
 
@@ -166,9 +165,8 @@ class THttpClient(TTransportBase):
 
         if not self.__custom_headers or 'User-Agent' not in self.__custom_headers:
             user_agent = 'Python/THttpClient'
-            script = os.path.basename(sys.argv[0])
-            if script:
-                user_agent = '%s (%s)' % (user_agent, urllib.parse.quote(script))
+            if script := os.path.basename(sys.argv[0]):
+                user_agent = f'{user_agent} ({urllib.parse.quote(script)})'
             self.__http.putheader('User-Agent', user_agent)
 
         if self.__custom_headers:

@@ -45,7 +45,7 @@ class TMultiplexedProcessor(TProcessor):
 
     def process(self, iprot, oprot):
         (name, type, seqid) = iprot.readMessageBegin()
-        if type != TMessageType.CALL and type != TMessageType.ONEWAY:
+        if type not in [TMessageType.CALL, TMessageType.ONEWAY]:
             raise TProtocolException(
                 TProtocolException.NOT_IMPLEMENTED,
                 "TMultiplexedProtocol only supports CALL & ONEWAY")
@@ -58,16 +58,24 @@ class TMultiplexedProcessor(TProcessor):
             else:
                 raise TProtocolException(
                     TProtocolException.NOT_IMPLEMENTED,
-                    "Service name not found in message name: " + name + ".  " +
-                    "Did you forget to use TMultiplexedProtocol in your client?")
+                    (
+                        f"Service name not found in message name: {name}.  "
+                        + "Did you forget to use TMultiplexedProtocol in your client?"
+                    ),
+                )
 
-        serviceName = name[0:index]
+
+        serviceName = name[:index]
         call = name[index + len(TMultiplexedProtocol.SEPARATOR):]
         if serviceName not in self.services:
             raise TProtocolException(
                 TProtocolException.NOT_IMPLEMENTED,
-                "Service name not found: " + serviceName + ".  " +
-                "Did you forget to call registerProcessor()?")
+                (
+                    f"Service name not found: {serviceName}.  "
+                    + "Did you forget to call registerProcessor()?"
+                ),
+            )
+
 
         standardMessage = (call, type, seqid)
         return self.services[serviceName].process(

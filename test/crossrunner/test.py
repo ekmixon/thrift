@@ -53,17 +53,17 @@ class TestProgram(object):
             p = path_join(self.workdir, arg)
             return p if os.path.exists(p) else arg
 
-        if cmd[0] == 'python':
-            cmd[0] = sys.executable
-        else:
-            cmd[0] = abs_if_exists(cmd[0])
+        cmd[0] = sys.executable if cmd[0] == 'python' else abs_if_exists(cmd[0])
         return cmd
 
     def _socket_args(self, socket, port):
         return {
             'ip-ssl': ['--ssl'],
-            'domain': ['--domain-socket=%s' % domain_socket_path(port)],
-            'abstract': ['--abstract-namespace', '--domain-socket=%s' % domain_socket_path(port)],
+            'domain': [f'--domain-socket={domain_socket_path(port)}'],
+            'abstract': [
+                '--abstract-namespace',
+                f'--domain-socket={domain_socket_path(port)}',
+            ],
         }.get(socket, None)
 
     def _transport_args(self, transport):
@@ -74,17 +74,15 @@ class TestProgram(object):
     def build_command(self, port):
         cmd = copy.copy(self._base_command)
         args = copy.copy(self._extra_args2)
-        args.append('--protocol=' + self.protocol)
-        args.append('--transport=' + self.transport)
-        transport_args = self._transport_args(self.transport)
-        if transport_args:
+        args.append(f'--protocol={self.protocol}')
+        args.append(f'--transport={self.transport}')
+        if transport_args := self._transport_args(self.transport):
             args += transport_args
-        socket_args = self._socket_args(self.socket, port)
-        if socket_args:
+        if socket_args := self._socket_args(self.socket, port):
             args += socket_args
         args.append('--port=%d' % port)
         if self._join_args:
-            cmd.append('%s' % " ".join(args))
+            cmd.append(f'{" ".join(args)}')
         else:
             cmd.extend(args)
         if self._extra_args:
@@ -131,7 +129,7 @@ class TestEntry(object):
 
     @classmethod
     def get_name(cls, server, client, protocol, transport, socket, *args, **kwargs):
-        return '%s-%s_%s_%s-%s' % (server, client, protocol, transport, socket)
+        return f'{server}-{client}_{protocol}_{transport}-{socket}'
 
     @property
     def name(self):
@@ -142,7 +140,7 @@ class TestEntry(object):
 
     @property
     def transport_name(self):
-        return '%s-%s' % (self.transport, self.socket)
+        return f'{self.transport}-{self.socket}'
 
 
 def test_name(server, client, protocol, transport, socket, **kwargs):

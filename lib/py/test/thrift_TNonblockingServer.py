@@ -72,7 +72,6 @@ class Client:
             return msg
         except AttributeError as e:
             raise e
-            print("self.msg not exit\n")
 
 
 class TestNonblockingServer(unittest.TestCase):
@@ -92,7 +91,6 @@ class TestNonblockingServer(unittest.TestCase):
             self.assertEqual("hello thrift", msg)
         except AssertionError as e:
             raise e
-            print("assert failure")
         finally:
             serve.close_server()
 

@@ -64,7 +64,7 @@ def main(client):
     print(('15-10=%d' % (diff)))
 
     log = yield client.getStruct(1)
-    print(('Check log: %s' % (log.value)))
+    print(f'Check log: {log.value}')
     reactor.stop()
 
 

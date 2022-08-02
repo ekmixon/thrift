@@ -66,23 +66,17 @@ class TestStalenessCheck(unittest.TestCase):
         used_file_path = os.path.join(temp_dir, "gen-cpp", "Single_constants.cpp")
 
         first_modification_time = os.path.getmtime(os.path.join(used_file_path))
-        used_file = open(used_file_path, "r")
-        first_contents = used_file.read()
-        used_file.close()
-
-        used_file = open(used_file_path, "a")
-        used_file.write("\n/* This is a comment */\n")
-        used_file.close()
-
+        with open(used_file_path, "r") as used_file:
+            first_contents = used_file.read()
+        with open(used_file_path, "a") as used_file:
+            used_file.write("\n/* This is a comment */\n")
         time.sleep(1.0)
 
         subprocess.call(command)
 
         second_modification_time = os.path.getmtime(used_file_path)
-        used_file = open(used_file_path, "r")
-        second_contents = used_file.read()
-        used_file.close()
-
+        with open(used_file_path, "r") as used_file:
+            second_contents = used_file.read()
         self.assertGreater(second_modification_time, first_modification_time)
         self.assertEqual(first_contents, second_contents)
 
@@ -108,10 +102,8 @@ class TestStalenessCheck(unittest.TestCase):
         included_constants_cpp_first_modification_time = os.path.getmtime(included_constants_cpp_file_path)
         including_constants_cpp_first_modification_time = os.path.getmtime(including_constants_cpp_file_path)
 
-        temp_included_file = open(temp_included_file_path, "a")
-        temp_included_file.write("\nconst i32 an_integer = 42\n")
-        temp_included_file.close()
-
+        with open(temp_included_file_path, "a") as temp_included_file:
+            temp_included_file.write("\nconst i32 an_integer = 42\n")
         time.sleep(1.0)
 
         subprocess.call(command)

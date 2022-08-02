@@ -262,14 +262,13 @@ class THeaderTransport(TTransportBase, CReadableTransport):
         headers = {}
         while buffer.tell() < end_of_headers:
             header_type = readVarint(buffer_transport)
-            if header_type == TInfoHeaderType.KEY_VALUE:
-                count = readVarint(buffer_transport)
-                for _ in range(count):
-                    key = _readString(buffer_transport)
-                    value = _readString(buffer_transport)
-                    headers[key] = value
-            else:
+            if header_type != TInfoHeaderType.KEY_VALUE:
                 break  # ignore unknown headers
+            count = readVarint(buffer_transport)
+            for _ in range(count):
+                key = _readString(buffer_transport)
+                value = _readString(buffer_transport)
+                headers[key] = value
         self._read_headers = headers
 
         # skip padding / anything we didn't understand

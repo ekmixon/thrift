@@ -80,7 +80,7 @@ def run_setup(with_binary):
             cmdclass=dict(build_ext=ve_build_ext)
         )
     else:
-        extensions = dict()
+        extensions = {}
 
     ssl_deps = []
     if sys.version_info[0] == 2:

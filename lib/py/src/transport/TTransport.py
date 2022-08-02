@@ -129,8 +129,7 @@ class TBufferedTransportFactory(object):
     """Factory transport that builds buffered transports"""
 
     def getTransport(self, trans):
-        buffered = TBufferedTransport(trans)
-        return buffered
+        return TBufferedTransport(trans)
 
 
 class TBufferedTransport(TTransportBase, CReadableTransport):
@@ -212,10 +211,7 @@ class TMemoryBuffer(TTransportBase, CReadableTransport):
 
         If value is set, this will be a transport for reading,
         otherwise, it is for writing"""
-        if value is not None:
-            self._buffer = BufferIO(value)
-        else:
-            self._buffer = BufferIO()
+        self._buffer = BufferIO(value) if value is not None else BufferIO()
         if offset:
             self._buffer.seek(offset)
 
@@ -254,8 +250,7 @@ class TFramedTransportFactory(object):
     """Factory transport that builds framed transports"""
 
     def getTransport(self, trans):
-        framed = TFramedTransport(trans)
-        return framed
+        return TFramedTransport(trans)
 
 
 class TFramedTransport(TTransportBase, CReadableTransport):
@@ -408,10 +403,7 @@ class TSaslClientTransport(TTransportBase, CReadableTransport):
     def recv_sasl_msg(self):
         header = self.transport.readAll(5)
         status, length = unpack(">BI", header)
-        if length > 0:
-            payload = self.transport.readAll(length)
-        else:
-            payload = ""
+        payload = self.transport.readAll(length) if length > 0 else ""
         return status, payload
 
     def write(self, data):

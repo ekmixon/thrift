@@ -25,7 +25,7 @@ class TBase(object):
 
     def __repr__(self):
         L = ['%s=%r' % (key, getattr(self, key)) for key in self.__slots__]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return f"{self.__class__.__name__}({', '.join(L)})"
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -72,14 +72,15 @@ class TFrozenBase(TBase):
 
     @classmethod
     def read(cls, iprot):
-        if (iprot._fast_decode is not None and
-                isinstance(iprot.trans, TTransport.CReadableTransport) and
-                cls.thrift_spec is not None):
-            self = cls()
-            return iprot._fast_decode(None, iprot,
-                                      [self.__class__, self.thrift_spec])
-        else:
+        if (
+            iprot._fast_decode is None
+            or not isinstance(iprot.trans, TTransport.CReadableTransport)
+            or cls.thrift_spec is None
+        ):
             return iprot.readStruct(cls, cls.thrift_spec, True)
+        self = cls()
+        return iprot._fast_decode(None, iprot,
+                                  [self.__class__, self.thrift_spec])
 
 
 class TFrozenExceptionBase(TFrozenBase, TExceptionBase):

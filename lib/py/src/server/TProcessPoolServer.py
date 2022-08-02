@@ -58,10 +58,10 @@ class TProcessPoolServer(TServer):
 
         while self.isRunning.value:
             try:
-                client = self.serverTransport.accept()
-                if not client:
+                if client := self.serverTransport.accept():
+                    self.serveClient(client)
+                else:
                     continue
-                self.serveClient(client)
             except (KeyboardInterrupt, SystemExit):
                 return 0
             except Exception as x:
@@ -94,7 +94,7 @@ class TProcessPoolServer(TServer):
         self.serverTransport.listen()
 
         # fork the children
-        for i in range(self.numWorkers):
+        for _ in range(self.numWorkers):
             try:
                 w = Process(target=self.workerProcess)
                 w.daemon = True

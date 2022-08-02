@@ -57,7 +57,7 @@ def service_ctrl(
 
             msg = fb_status_string(status)
             if (len(status_details)):
-                msg += " - %s" % status_details
+                msg += f" - {status_details}"
             print(msg)
             return 2 if status == fb_status.ALIVE else 3
         except:
@@ -95,10 +95,9 @@ def service_ctrl(
             except:
                 print("failed to tell the service to ", command)
                 return 3
-    else:
-        if command in ["stop", "reload"]:
-            print("root privileges are required to stop or reload the service.")
-            return 4
+    elif command in ["stop", "reload"]:
+        print("root privileges are required to stop or reload the service.")
+        return 4
 
     print("The following commands are available:")
     for command in ["counters", "name", "version", "alive", "status"]:

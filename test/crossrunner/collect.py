@@ -65,11 +65,10 @@ def _collect_testlibs(config, server_match, client_match=[None]):
 
     def yield_testlibs(base_configs, configs, match):
         for base, conf in zip(base_configs, configs):
-            if conf:
-                if not match or base['name'] in match:
-                    platforms = conf.get('platforms') or base.get('platforms')
-                    if not platforms or platform.system() in platforms:
-                        yield merge_dict(base, conf)
+            if conf and (not match or base['name'] in match):
+                platforms = conf.get('platforms') or base.get('platforms')
+                if not platforms or platform.system() in platforms:
+                    yield merge_dict(base, conf)
 
     libs, svs, cls = zip(*expand_libs(config))
     servers = list(yield_testlibs(libs, svs, server_match))
@@ -106,10 +105,11 @@ def _do_collect_tests(servers, clients):
                 v = set(to_spec_impl_tuples(set(v)))
                 o[key] = v
             return v
+
         for spec1, impl1 in cached_set(o1):
             for spec2, impl2 in cached_set(o2):
                 if spec1 == spec2:
-                    name = impl1 if impl1 == impl2 else '%s-%s' % (impl1, impl2)
+                    name = impl1 if impl1 == impl2 else f'{impl1}-{impl2}'
                     yield name, impl1, impl2
 
     def maybe_max(key, o1, o2, default):

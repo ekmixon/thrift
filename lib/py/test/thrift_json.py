@@ -98,9 +98,7 @@ class TestJSONString(unittest.TestCase):
         u_12 = protocol.readBool()
         protocol.writeJSONObjectEnd()
 
-        result_read = {}
-        result_read[u_1] = u_2
-        result_read[u_3] = []
+        result_read = {u_1: u_2, u_3: []}
         result_read[u_3].append(u_4)
         result_read[u_3].append(u_5)
         result_read[u_3].append(u_6)

@@ -216,18 +216,18 @@ class TProtocolBase(object):
             self.readStructEnd()
         elif ttype == TType.MAP:
             (ktype, vtype, size) = self.readMapBegin()
-            for i in range(size):
+            for _ in range(size):
                 self.skip(ktype)
                 self.skip(vtype)
             self.readMapEnd()
         elif ttype == TType.SET:
             (etype, size) = self.readSetBegin()
-            for i in range(size):
+            for _ in range(size):
                 self.skip(etype)
             self.readSetEnd()
         elif ttype == TType.LIST:
             (etype, size) = self.readListBegin()
-            for i in range(size):
+            for _ in range(size):
                 self.skip(etype)
             self.readListEnd()
         else:

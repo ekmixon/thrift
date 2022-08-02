@@ -128,8 +128,9 @@ class TSSLBase(object):
             self._custom_context = True
             if ssl_opts:
                 raise ValueError(
-                    'Incompatible arguments: ssl_context and %s'
-                    % ' '.join(ssl_opts.keys()))
+                    f"Incompatible arguments: ssl_context and {' '.join(ssl_opts.keys())}"
+                )
+
             if not self._has_ssl_context:
                 raise ValueError(
                     'ssl_context is not available for this version of Python')
@@ -165,7 +166,7 @@ class TSSLBase(object):
         if self._server_side and not certfile:
             raise ValueError('certfile is needed for server-side')
         if certfile and not os.access(certfile, os.R_OK):
-            raise IOError('No such certfile found: %s' % (certfile))
+            raise IOError(f'No such certfile found: {certfile}')
         self._certfile = certfile
 
     def _wrap_socket(self, sock):
@@ -252,9 +253,11 @@ class TSSLSocket(TSocket.TSocket, TSSLBase):
         if validate is not None:
             cert_reqs_name = 'CERT_REQUIRED' if validate else 'CERT_NONE'
             warnings.warn(
-                'validate is deprecated. please use cert_reqs=ssl.%s instead'
-                % cert_reqs_name,
-                DeprecationWarning, stacklevel=2)
+                f'validate is deprecated. please use cert_reqs=ssl.{cert_reqs_name} instead',
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
             if 'cert_reqs' in kwargs:
                 raise TypeError('Cannot specify both validate and cert_reqs')
             kwargs['cert_reqs'] = ssl.CERT_REQUIRED if validate else ssl.CERT_NONE

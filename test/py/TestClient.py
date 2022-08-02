@@ -35,10 +35,13 @@ SCRIPT_DIR = os.path.abspath(os.path.dirname(__file__))
 class AbstractTest(unittest.TestCase):
     def setUp(self):
         if options.trans == 'http':
-            uri = '{0}://{1}:{2}{3}'.format(('https' if options.ssl else 'http'),
-                                            options.host,
-                                            options.port,
-                                            (options.http_path if options.http_path else '/'))
+            uri = '{0}://{1}:{2}{3}'.format(
+                'https' if options.ssl else 'http',
+                options.host,
+                options.port,
+                options.http_path or '/',
+            )
+
             if options.ssl:
                 __cafile = os.path.join(os.path.dirname(SCRIPT_DIR), "keys", "CA.pem")
                 __certfile = os.path.join(os.path.dirname(SCRIPT_DIR), "keys", "client.crt")
@@ -59,7 +62,7 @@ class AbstractTest(unittest.TestCase):
             elif options.trans == 'buffered':
                 self.transport = TTransport.TBufferedTransport(socket)
             elif options.trans == '':
-                raise AssertionError('Unknown --transport option: %s' % options.trans)
+                raise AssertionError(f'Unknown --transport option: {options.trans}')
             if options.zlib:
                 self.transport = TZlibTransport.TZlibTransport(self.transport, 9)
         self.transport.open()
@@ -146,7 +149,7 @@ class AbstractTest(unittest.TestCase):
 
     def testBinary(self):
         print('testBinary')
-        val = bytearray([i for i in range(0, 256)])
+        val = bytearray(list(range(256)))
         self.assertEqual(bytearray(self.client.testBinary(bytes(val))), val)
 
     def testStruct(self):
@@ -174,7 +177,7 @@ class AbstractTest(unittest.TestCase):
 
     def testSet(self):
         print('testSet')
-        x = set([8, 1, 42])
+        x = {8, 1, 42}
         y = self.client.testSet(x)
         self.assertEqual(y, x)
 
@@ -297,7 +300,7 @@ class TPedanticSequenceIdProtocolWrapper(TProtocolDecorator.TProtocolDecorator):
     def readMessageBegin(self):
         global LAST_SEQID
         (name, type, seqid) =\
-            super(TPedanticSequenceIdProtocolWrapper, self).readMessageBegin()
+                super(TPedanticSequenceIdProtocolWrapper, self).readMessageBegin()
         if LAST_SEQID != seqid:
             raise TProtocol.TProtocolException(
                 TProtocol.TProtocolException.INVALID_DATA,
@@ -410,12 +413,12 @@ class MultiplexedHeaderTest(MultiplexedOptionalTest):
 def suite():
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
-    if options.proto == 'binary':  # look for --proto on cmdline
-        suite.addTest(loader.loadTestsFromTestCase(BinaryTest))
-    elif options.proto == 'accel':
+    if options.proto == 'accel':
         suite.addTest(loader.loadTestsFromTestCase(AcceleratedBinaryTest))
     elif options.proto == 'accelc':
         suite.addTest(loader.loadTestsFromTestCase(AcceleratedCompactTest))
+    elif options.proto == 'binary':
+        suite.addTest(loader.loadTestsFromTestCase(BinaryTest))
     elif options.proto == 'compact':
         suite.addTest(loader.loadTestsFromTestCase(CompactTest))
     elif options.proto == 'header':
@@ -435,16 +438,16 @@ def suite():
     elif options.proto == 'multij':
         suite.addTest(loader.loadTestsFromTestCase(MultiplexedJSONTest))
     else:
-        raise AssertionError('Unknown protocol given with --protocol: %s' % options.proto)
+        raise AssertionError(
+            f'Unknown protocol given with --protocol: {options.proto}'
+        )
+
     return suite
 
 
 class OwnArgsTestProgram(unittest.TestProgram):
     def parseArgs(self, argv):
-        if args:
-            self.testNames = args
-        else:
-            self.testNames = ([self.defaultTest])
+        self.testNames = args or ([self.defaultTest])
         self.createTests()
 
 

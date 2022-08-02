@@ -210,7 +210,7 @@ class TThreadPoolServer(TServer):
 
     def serve(self):
         """Start a fixed number of worker threads and put client into a queue"""
-        for i in range(self.threads):
+        for _ in range(self.threads):
             try:
                 t = threading.Thread(target=self.serveThread)
                 t.setDaemon(self.daemon)
@@ -222,10 +222,10 @@ class TThreadPoolServer(TServer):
         self.serverTransport.listen()
         while True:
             try:
-                client = self.serverTransport.accept()
-                if not client:
+                if client := self.serverTransport.accept():
+                    self.clients.put(client)
+                else:
                     continue
-                self.clients.put(client)
             except Exception as x:
                 logger.exception(x)
 
@@ -290,14 +290,13 @@ class TForkingServer(TServer):
 
                     ecode = 0
                     try:
-                        try:
-                            while True:
-                                self.processor.process(iprot, oprot)
-                        except TTransport.TTransportException:
-                            pass
-                        except Exception as e:
-                            logger.exception(e)
-                            ecode = 1
+                        while True:
+                            self.processor.process(iprot, oprot)
+                    except TTransport.TTransportException:
+                        pass
+                    except Exception as e:
+                        logger.exception(e)
+                        ecode = 1
                     finally:
                         try_close(itrans)
                         if otrans:

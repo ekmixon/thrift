@@ -36,7 +36,9 @@ def legacy_validate_callback(cert, hostname):
     if 'subject' not in cert:
         raise TTransportException(
             TTransportException.NOT_OPEN,
-            'No SSL certificate found from %s' % hostname)
+            f'No SSL certificate found from {hostname}',
+        )
+
     fields = cert['subject']
     for field in fields:
         # ensure structure we get back is what we expect
@@ -45,7 +47,7 @@ def legacy_validate_callback(cert, hostname):
         cert_pair = field[0]
         if len(cert_pair) < 2:
             continue
-        cert_key, cert_value = cert_pair[0:2]
+        cert_key, cert_value = cert_pair[:2]
         if cert_key != 'commonName':
             continue
         certhost = cert_value
@@ -81,9 +83,8 @@ def _optional_dependencies():
             match = match_hostname
             if ver[0] * 10 + ver[1] >= 35:
                 return ipaddr, match
-            else:
-                logger.warn('backports.ssl_match_hostname module is too old')
-                ipaddr = False
+            logger.warn('backports.ssl_match_hostname module is too old')
+            ipaddr = False
         except ImportError:
             logger.warn('backports.ssl_match_hostname is unavailable')
             ipaddr = False

@@ -60,8 +60,8 @@ def run_cross_tests(server_match, client_match, jobs, skip_known_failures, only_
     tests = crossrunner.collect_cross_tests(j, server_match, client_match, regex)
     if not tests:
         print('No test found that matches the criteria', file=sys.stderr)
-        print('  servers: %s' % server_match, file=sys.stderr)
-        print('  clients: %s' % client_match, file=sys.stderr)
+        print(f'  servers: {server_match}', file=sys.stderr)
+        print(f'  clients: {client_match}', file=sys.stderr)
         return False
     if only_known_failures:
         logger.debug('Only running known failures')
@@ -96,8 +96,8 @@ def run_feature_tests(server_match, feature_match, jobs, skip_known_failures, on
     tests = crossrunner.collect_feature_tests(j, j2, server_match, feature_match, regex)
     if not tests:
         print('No test found that matches the criteria', file=sys.stderr)
-        print('  servers: %s' % server_match, file=sys.stderr)
-        print('  features: %s' % feature_match, file=sys.stderr)
+        print(f'  servers: {server_match}', file=sys.stderr)
+        print(f'  features: {feature_match}', file=sys.stderr)
         return False
     if only_known_failures:
         logger.debug('Only running known failures')

@@ -85,8 +85,8 @@ class TestReporter(object):
 
     @classmethod
     def test_logfile(cls, test_name, prog_kind, dir=None):
-        relpath = path_join('log', '%s_%s.log' % (test_name, prog_kind))
-        return relpath if not dir else os.path.realpath(path_join(dir, relpath))
+        relpath = path_join('log', f'{test_name}_{prog_kind}.log')
+        return os.path.realpath(path_join(dir, relpath)) if dir else relpath
 
     def _start(self):
         self._start_time = time.time()
@@ -97,7 +97,7 @@ class TestReporter(object):
 
     @classmethod
     def _format_date(cls):
-        return '%s' % datetime.datetime.now().strftime(cls.DATETIME_FORMAT)
+        return f'{datetime.datetime.now().strftime(cls.DATETIME_FORMAT)}'
 
     def _print_date(self):
         print(self._format_date(), file=self.out)
@@ -179,7 +179,7 @@ class ExecReporter(TestReporter):
             def match(line):
                 for expr in exprs:
                     if expr.search(line):
-                        self._log.info("maybe false positive: %s" % line)
+                        self._log.info(f"maybe false positive: {line}")
                         return True
 
             with logfile_open(self.logpath, 'r') as fp:
@@ -188,7 +188,10 @@ class ExecReporter(TestReporter):
         except (KeyboardInterrupt, SystemExit):
             raise
         except Exception as ex:
-            self._log.warn('[%s]: Error while detecting false positive: %s' % (self._test.name, str(ex)))
+            self._log.warn(
+                f'[{self._test.name}]: Error while detecting false positive: {str(ex)}'
+            )
+
             self._log.info(traceback.print_exc())
         return False
 
@@ -200,10 +203,10 @@ class ExecReporter(TestReporter):
 
     def _print_header(self):
         self._print_date()
-        print('Executing: %s' % str_join(' ', self._prog.command), file=self.out)
-        print('Directory: %s' % self._prog.workdir, file=self.out)
-        print('config:delay: %s' % self._test.delay, file=self.out)
-        print('config:timeout: %s' % self._test.timeout, file=self.out)
+        print(f"Executing: {str_join(' ', self._prog.command)}", file=self.out)
+        print(f'Directory: {self._prog.workdir}', file=self.out)
+        print(f'config:delay: {self._test.delay}', file=self.out)
+        print(f'config:timeout: {self._test.timeout}', file=self.out)
         self._print_bar()
         self.out.flush()
 
@@ -262,13 +265,20 @@ class SummaryReporter(TestReporter):
         return out.strip()
 
     def _format_test(self, test, with_result=True):
-        name = '%s-%s' % (test.server.name, test.client.name)
-        trans = '%s-%s' % (test.transport, test.socket)
-        if not with_result:
-            return '{:24s}{:18s}{:25s}'.format(name[:23], test.protocol[:17], trans[:24])
-        else:
-            return '{:24s}{:18s}{:25s}{:s}\n'.format(name[:23], test.protocol[:17],
-                                                     trans[:24], self._result_string(test))
+        name = f'{test.server.name}-{test.client.name}'
+        trans = f'{test.transport}-{test.socket}'
+        return (
+            '{:24s}{:18s}{:25s}{:s}\n'.format(
+                name[:23],
+                test.protocol[:17],
+                trans[:24],
+                self._result_string(test),
+            )
+            if with_result
+            else '{:24s}{:18s}{:25s}'.format(
+                name[:23], test.protocol[:17], trans[:24]
+            )
+        )
 
     def _print_test_header(self):
         self._print_bar()
@@ -375,22 +385,29 @@ class SummaryReporter(TestReporter):
             }, indent=2))
 
     def _assemble_log(self, title, indexes):
-        if len(indexes) > 0:
-            def add_prog_log(fp, test, prog_kind):
-                print('*************************** %s message ***************************' % prog_kind,
-                      file=fp)
-                path = self.test_logfile(test.name, prog_kind, self.testdir)
-                if os.path.exists(path):
-                    with logfile_open(path, 'r') as prog_fp:
-                        print(prog_fp.read(), file=fp)
-            filename = title.replace(' ', '_') + '.log'
-            with logfile_open(os.path.join(self.logdir, filename), 'w+') as fp:
-                for test in map(self._tests.__getitem__, indexes):
-                    fp.write('TEST: [%s]\n' % test.name)
-                    add_prog_log(fp, test, test.server.kind)
-                    add_prog_log(fp, test, test.client.kind)
-                    fp.write('**********************************************************************\n\n')
-            print('%s are logged to %s/%s/%s' % (title.capitalize(), self._testdir_rel, LOG_DIR, filename))
+        if len(indexes) <= 0:
+            return
+        def add_prog_log(fp, test, prog_kind):
+            print(
+                f'*************************** {prog_kind} message ***************************',
+                file=fp,
+            )
+
+            path = self.test_logfile(test.name, prog_kind, self.testdir)
+            if os.path.exists(path):
+                with logfile_open(path, 'r') as prog_fp:
+                    print(prog_fp.read(), file=fp)
+
+        filename = title.replace(' ', '_') + '.log'
+        with logfile_open(os.path.join(self.logdir, filename), 'w+') as fp:
+            for test in map(self._tests.__getitem__, indexes):
+                fp.write('TEST: [%s]\n' % test.name)
+                add_prog_log(fp, test, test.server.kind)
+                add_prog_log(fp, test, test.client.kind)
+                fp.write('**********************************************************************\n\n')
+        print(
+            f'{title.capitalize()} are logged to {self._testdir_rel}/{LOG_DIR}/{filename}'
+        )
 
     def end(self):
         self._print_footer()
@@ -417,16 +434,16 @@ class SummaryReporter(TestReporter):
             known = test.name in self._known_failures
             if failed:
                 if known:
-                    self._log.debug('%s failed as expected' % test.name)
+                    self._log.debug(f'{test.name} failed as expected')
                     self._expected_failure.append(index)
                 else:
-                    self._log.info('unexpected failure: %s' % test.name)
+                    self._log.info(f'unexpected failure: {test.name}')
                     self._unexpected_failure.append(index)
             elif flaky and not known:
-                self._log.info('unexpected flaky success: %s' % test.name)
+                self._log.info(f'unexpected flaky success: {test.name}')
                 self._flaky_success.append(index)
             elif not flaky and known:
-                self._log.info('unexpected success: %s' % test.name)
+                self._log.info(f'unexpected success: {test.name}')
                 self._unexpected_success.append(index)
             test.success = not failed
             test.returncode = returncode

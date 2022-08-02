@@ -69,8 +69,7 @@ def default_servers():
         'THttpServer',
     ]
     if platform.system() != 'Windows':
-        servers.append('TProcessPoolServer')
-        servers.append('TForkingServer')
+        servers.extend(('TProcessPoolServer', 'TForkingServer'))
     return servers
 
 
@@ -81,8 +80,7 @@ def relfile(fname):
 def setup_pypath(libdir, gendir):
     dirs = [libdir, gendir]
     env = copy.deepcopy(os.environ)
-    pypath = env.get('PYTHONPATH', None)
-    if pypath:
+    if pypath := env.get('PYTHONPATH', None):
         dirs.append(pypath)
     env['PYTHONPATH'] = os.pathsep.join(dirs)
     if gendir.endswith('gen-py-no_utf8strings'):
@@ -97,9 +95,9 @@ def runScriptTest(libdir, genbase, genpydir, script):
     ret = subprocess.call(script_args, env=env)
     if ret != 0:
         print('*** FAILED ***', file=sys.stderr)
-        print('LIBDIR: %s' % libdir, file=sys.stderr)
-        print('PY_GEN: %s' % genpydir, file=sys.stderr)
-        print('SCRIPT: %s' % script, file=sys.stderr)
+        print(f'LIBDIR: {libdir}', file=sys.stderr)
+        print(f'PY_GEN: {genpydir}', file=sys.stderr)
+        print(f'SCRIPT: {script}', file=sys.stderr)
         raise Exception("Script subprocess failed, retcode=%d, args: %s" % (ret, ' '.join(script_args)))
 
 
@@ -109,7 +107,7 @@ def runServiceTest(libdir, genbase, genpydir, server_class, proto, port, use_zli
     server_args = [sys.executable, relfile('TestServer.py')]
     cli_args = [sys.executable, relfile('TestClient.py')]
     for which in (server_args, cli_args):
-        which.append('--protocol=%s' % proto)  # accel, binary, compact or json
+        which.append(f'--protocol={proto}')
         which.append('--port=%d' % port)  # default to 9090
         if use_zlib:
             which.append('--zlib')
@@ -129,15 +127,17 @@ def runServiceTest(libdir, genbase, genpydir, server_class, proto, port, use_zli
     if server_class == 'THttpServer':
         cli_args.append('--http=/')
     if verbose > 0:
-        print('Testing server %s: %s' % (server_class, ' '.join(server_args)))
+        print(f"Testing server {server_class}: {' '.join(server_args)}")
     serverproc = subprocess.Popen(server_args, env=env)
 
     def ensureServerAlive():
         if serverproc.poll() is not None:
             print(('FAIL: Server process (%s) failed with retcode %d')
                   % (' '.join(server_args), serverproc.returncode))
-            raise Exception('Server subprocess %s died, args: %s'
-                            % (server_class, ' '.join(server_args)))
+            raise Exception(
+                f"Server subprocess {server_class} died, args: {' '.join(server_args)}"
+            )
+
 
     # Wait for the server to start accepting connections on the given port.
     sleep_time = 0.1  # Seconds
@@ -162,12 +162,12 @@ def runServiceTest(libdir, genbase, genpydir, server_class, proto, port, use_zli
 
     try:
         if verbose > 0:
-            print('Testing client: %s' % (' '.join(cli_args)))
+            print(f"Testing client: {' '.join(cli_args)}")
         ret = subprocess.call(cli_args, env=env)
         if ret != 0:
             print('*** FAILED ***', file=sys.stderr)
-            print('LIBDIR: %s' % libdir, file=sys.stderr)
-            print('PY_GEN: %s' % genpydir, file=sys.stderr)
+            print(f'LIBDIR: {libdir}', file=sys.stderr)
+            print(f'PY_GEN: {genpydir}', file=sys.stderr)
             raise Exception("Client subprocess failed, retcode=%d, args: %s" % (ret, ' '.join(cli_args)))
     finally:
         # check that server didn't die
@@ -276,9 +276,9 @@ def main():
     parser.set_defaults(verbose=1)
     options, args = parser.parse_args()
 
-    generated_dirs = []
-    for gp_dir in options.genpydirs.split(','):
-        generated_dirs.append('gen-py-%s' % (gp_dir))
+    generated_dirs = [
+        f'gen-py-{gp_dir}' for gp_dir in options.genpydirs.split(',')
+    ]
 
     # commandline permits a single class name to be specified to override SERVERS=[...]
     servers = default_servers()

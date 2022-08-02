@@ -80,10 +80,12 @@ class SimpleJSONProtocolTest(unittest.TestCase):
             newdouble=5.0,
             newstruct=Bonk(message="Hello!", type=123),
             newlist=[7, 8, 9],
-            newset=set([42, 1, 8]),
+            newset={42, 1, 8},
             newmap={1: 2, 2: 3},
             newstring="Hola!",
-            end_in_both=54321)
+            end_in_both=54321,
+        )
+
         expected = dict(begin_in_both=v2obj.begin_in_both,
                         newint=v2obj.newint,
                         newbyte=v2obj.newbyte,

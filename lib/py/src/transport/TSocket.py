@@ -91,9 +91,7 @@ class TSocket(TSocketBase):
             try:
                 peeked_bytes = self.handle.recv(1, socket.MSG_PEEK)
             except (socket.error, OSError) as exc:  # on modern python this is just BlockingIOError
-                if exc.errno in (errno.EWOULDBLOCK, errno.EAGAIN):
-                    return True
-                return False
+                return exc.errno in (errno.EWOULDBLOCK, errno.EAGAIN)
         finally:
             self.handle.settimeout(original_timeout)
 
@@ -101,11 +99,7 @@ class TSocket(TSocketBase):
         return len(peeked_bytes) == 1
 
     def setTimeout(self, ms):
-        if ms is None:
-            self._timeout = None
-        else:
-            self._timeout = ms / 1000.0
-
+        self._timeout = None if ms is None else ms / 1000.0
         if self.handle is not None:
             self.handle.settimeout(self._timeout)
 
@@ -114,7 +108,7 @@ class TSocket(TSocketBase):
 
     @property
     def _address(self):
-        return self._unix_socket if self._unix_socket else '%s:%d' % (self.host, self.port)
+        return self._unix_socket or '%s:%d' % (self.host, self.port)
 
     def open(self):
         if self.handle:
@@ -122,7 +116,7 @@ class TSocket(TSocketBase):
         try:
             addrs = self._resolveAddr()
         except socket.gaierror as gai:
-            msg = 'failed to resolve sockaddr for ' + str(self._address)
+            msg = f'failed to resolve sockaddr for {str(self._address)}'
             logger.exception(msg)
             raise TTransportException(type=TTransportException.NOT_OPEN, message=msg, inner=gai)
         for family, socktype, _, _, sockaddr in addrs:

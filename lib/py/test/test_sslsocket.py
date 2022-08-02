@@ -79,7 +79,7 @@ class ServerAcceptor(threading.Thread):
                 self._client.read(5)  # hello
                 self._client.write(b"there")
         except Exception:
-            logging.exception('error on server side (%s):' % self.name)
+            logging.exception(f'error on server side ({self.name}):')
             if not self._expect_failure:
                 raise
         finally:

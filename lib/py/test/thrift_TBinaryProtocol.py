@@ -153,11 +153,7 @@ def testField(type, data):
 
 
 def testMessage(data):
-    message = {}
-    message['name'] = data[0]
-    message['type'] = data[1]
-    message['seqid'] = data[2]
-
+    message = {'name': data[0], 'type': data[1], 'seqid': data[2]}
     buf = TTransport.TMemoryBuffer()
     transport = TTransport.TBufferedTransportFactory().getTransport(buf)
     protocol = TBinaryProtocol(transport)
@@ -180,7 +176,7 @@ class TestTBinaryProtocol(unittest.TestCase):
     def test_TBinaryProtocol_write_read(self):
         try:
             testNaked('Byte', 123)
-            for i in range(0, 128):
+            for i in range(128):
                 self.assertEqual(i, testField('Byte', i))
                 self.assertEqual(-i, testField('Byte', -i))
 

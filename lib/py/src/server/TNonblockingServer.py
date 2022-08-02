@@ -327,8 +327,7 @@ class TNonblockingServer(object):
                 self._read.recv(1024)
             elif readable == self.socket.handle.fileno():
                 try:
-                    client = self.socket.accept()
-                    if client:
+                    if client := self.socket.accept():
                         self.clients[client.handle.fileno()] = Connection(client.handle,
                                                                           self.wake_up)
                 except socket.error:

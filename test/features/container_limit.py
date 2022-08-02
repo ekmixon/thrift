@@ -14,7 +14,7 @@ def test_list(proto, value):
     ttype = TType.LIST
     etype = TType.I32
     proto.writeMessageBegin(method_name, TMessageType.CALL, 3)
-    proto.writeStructBegin(method_name + '_args')
+    proto.writeStructBegin(f'{method_name}_args')
     proto.writeFieldBegin('thing', ttype, 1)
     proto.writeListBegin(etype, len(value))
     for e in value:

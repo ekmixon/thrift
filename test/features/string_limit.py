@@ -13,7 +13,7 @@ def test_string(proto, value):
     method_name = 'testString'
     ttype = TType.STRING
     proto.writeMessageBegin(method_name, TMessageType.CALL, 3)
-    proto.writeStructBegin(method_name + '_args')
+    proto.writeStructBegin(f'{method_name}_args')
     proto.writeFieldBegin('thing', ttype, 1)
     proto.writeString(value)
     proto.writeFieldEnd()

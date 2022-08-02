@@ -81,9 +81,7 @@ CTYPES = {
     TType.MAP: 'map',
 }
 
-JTYPES = {}
-for key in CTYPES.keys():
-    JTYPES[CTYPES[key]] = key
+JTYPES = {CTYPES[key]: key for key in CTYPES}
 
 
 class JSONBaseContext(object):
@@ -147,7 +145,7 @@ class JSONPairContext(JSONBaseContext):
         return self.colon
 
     def __str__(self):
-        return '%s, colon=%s' % (self.__class__.__name__, self.colon)
+        return f'{self.__class__.__name__}, colon={self.colon}'
 
 
 class LookaheadReader():
@@ -180,11 +178,11 @@ class TJSONProtocolBase(TProtocolBase):
 
     # We don't have length limit implementation for JSON protocols
     @property
-    def string_length_limit(senf):
+    def string_length_limit(self):
         return None
 
     @property
-    def container_length_limit(senf):
+    def container_length_limit(self):
         return None
 
     def resetWriteContext(self):
@@ -252,8 +250,9 @@ class TJSONProtocolBase(TProtocolBase):
     def readJSONSyntaxChar(self, character):
         current = self.reader.read()
         if character != current:
-            raise TProtocolException(TProtocolException.INVALID_DATA,
-                                     "Unexpected character: %s" % current)
+            raise TProtocolException(
+                TProtocolException.INVALID_DATA, f"Unexpected character: {current}"
+            )
 
     def _isHighSurrogate(self, codeunit):
         return codeunit >= 0xd800 and codeunit <= 0xdbff
@@ -263,19 +262,18 @@ class TJSONProtocolBase(TProtocolBase):
 
     def _toChar(self, high, low=None):
         if not low:
-            if sys.version_info[0] == 2:
-                return ("\\u%04x" % high).decode('unicode-escape') \
-                                         .encode('utf-8')
-            else:
-                return chr(high)
-        else:
-            codepoint = (1 << 16) + ((high & 0x3ff) << 10)
-            codepoint += low & 0x3ff
-            if sys.version_info[0] == 2:
-                s = "\\U%08x" % codepoint
-                return s.decode('unicode-escape').encode('utf-8')
-            else:
-                return chr(codepoint)
+            return (
+                ("\\u%04x" % high).decode('unicode-escape').encode('utf-8')
+                if sys.version_info[0] == 2
+                else chr(high)
+            )
+
+        codepoint = (1 << 16) + ((high & 0x3ff) << 10)
+        codepoint += low & 0x3ff
+        if sys.version_info[0] != 2:
+            return chr(codepoint)
+        s = "\\U%08x" % codepoint
+        return s.decode('unicode-escape').encode('utf-8')
 
     def readJSONString(self, skipContext):
         highSurrogate = None
@@ -308,12 +306,12 @@ class TJSONProtocolBase(TProtocolBase):
                         highSurrogate = None
                     else:
                         character = self._toChar(codeunit)
-                else:
-                    if character not in ESCAPE_CHARS:
-                        raise TProtocolException(
-                            TProtocolException.INVALID_DATA,
-                            "Expected control char")
+                elif character in ESCAPE_CHARS:
                     character = ESCAPE_CHARS[character]
+                else:
+                    raise TProtocolException(
+                        TProtocolException.INVALID_DATA,
+                        "Expected control char")
             elif character in ESCAPE_CHAR_VALS:
                 raise TProtocolException(TProtocolException.INVALID_DATA,
                                          "Unescaped control char")
@@ -330,7 +328,7 @@ class TJSONProtocolBase(TProtocolBase):
         return ''.join(string)
 
     def isJSONNumeric(self, character):
-        return (True if NUMERIC_CHAR.find(character) != - 1 else False)
+        return NUMERIC_CHAR.find(character) != - 1
 
     def readJSONQuotes(self):
         if (self.context.escapeNum()):
@@ -387,7 +385,7 @@ class TJSONProtocolBase(TProtocolBase):
         m = size % 4
         # Force padding since b64encode method does not allow it
         if m != 0:
-            for i in range(4 - m):
+            for _ in range(4 - m):
                 string += '='
         return base64.b64decode(string)
 
@@ -473,7 +471,7 @@ class TJSONProtocol(TJSONProtocolBase):
     readListEnd = readCollectionEnd
 
     def readBool(self):
-        return (False if self.readJSONInteger() == 0 else True)
+        return self.readJSONInteger() != 0
 
     def readNumber(self):
         return self.readJSONInteger()
@@ -582,11 +580,11 @@ class TJSONProtocolFactory(TProtocolFactory):
         return TJSONProtocol(trans)
 
     @property
-    def string_length_limit(senf):
+    def string_length_limit(self):
         return None
 
     @property
-    def container_length_limit(senf):
+    def container_length_limit(self):
         return None
 
 

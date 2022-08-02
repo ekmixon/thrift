@@ -44,11 +44,11 @@ class CalculatorHandler(object):
         print("ping()")
 
     def add(self, n1, n2):
-        print("add({}, {})".format(n1, n2))
+        print(f"add({n1}, {n2})")
         return n1 + n2
 
     def calculate(self, logid, work):
-        print("calculate({}, {})".format(logid, work))
+        print(f"calculate({logid}, {work})")
 
         if work.op == Operation.ADD:
             val = work.num1 + work.num2
@@ -70,7 +70,7 @@ class CalculatorHandler(object):
         return val
 
     def getStruct(self, key):
-        print("getStruct({})".format(key))
+        print(f"getStruct({key})")
         return self.log[key]
 
     def zip(self):

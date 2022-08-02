@@ -87,23 +87,20 @@ class ExecutionContext(object):
         yield self
         if self.is_server:
             # the server is supposed to run until we stop it
-            if self.returncode is not None:
-                self.report.died()
-            else:
-                if self.stop_signal != SIGNONE:
-                    if self.sigwait(self.stop_signal):
-                        self.report.end(self.returncode)
-                    else:
-                        self.report.killed()
-                else:
+            if self.returncode is None:
+                if self.stop_signal == SIGNONE:
                     self.sigwait(SIGKILL)
-        else:
-            # the client is supposed to exit normally
-            if self.returncode is not None:
-                self.report.end(self.returncode)
+                elif self.sigwait(self.stop_signal):
+                    self.report.end(self.returncode)
+                else:
+                    self.report.killed()
             else:
-                self.sigwait(SIGKILL)
-                self.report.killed()
+                self.report.died()
+        elif self.returncode is not None:
+            self.report.end(self.returncode)
+        else:
+            self.sigwait(SIGKILL)
+            self.report.killed()
         self._log.debug('[{0}] exited with return code {1}'.format(self.proc.pid, self.returncode))
 
     # Send a signal to the process and then wait for it to end
@@ -251,9 +248,8 @@ def run_test(testdir, logdir, test_dict, max_retry, async_mode=True):
 
                 if result == 0 or retry_count >= max_retry:
                     return (retry_count, result)
-                else:
-                    logger.info('[%s-%s]: test failed, retrying...', test.server.name, test.client.name)
-                    retry_count += 1
+                logger.info('[%s-%s]: test failed, retrying...', test.server.name, test.client.name)
+                retry_count += 1
     except Exception:
         if not async_mode:
             raise

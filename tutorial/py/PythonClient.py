@@ -76,7 +76,7 @@ def main():
     print('15-10=%d' % diff)
 
     log = client.getStruct(1)
-    print('Check log: %s' % log.value)
+    print(f'Check log: {log.value}')
 
     # Close!
     transport.close()
@@ -86,4 +86,4 @@ if __name__ == '__main__':
     try:
         main()
     except Thrift.TException as tx:
-        print('%s' % tx.message)
+        print(f'{tx.message}')
